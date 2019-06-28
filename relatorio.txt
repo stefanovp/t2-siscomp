@@ -64,6 +64,18 @@ Uma estutura página possui os campos:
 
 A cada iteração também são incrementados o número de Page Hits ou Page Faults, de acordo com o que acontece.
 
+############ ALGORITMO NOVO IDEAL ############
+
+O algoritmo de substituição ideal saberia qual é a página que vai ser acessada no futuro mais distante, e
+faria o swap-out dela quando a memória física estivesse cheia. Melhor ainda, ao invés de simplesmente swap-out
+a página com acesso mais distante, ele levaria em consideração se esta página foi modificada ou não e, dentre um
+pequeno conjunto de páginas com os acessos mais distantes, daria preferência de swap-out a aquelas que não foram escritas,
+para não ter que copiar a página para o disco.
+
+Dessa forma, o número de PageFaults seria o perto do menor possível, equanto se leva o tempo de cópia da página 
+para o disco em consideração.
+
+
 ############ RESULTADOS ############
 
 ### Tabela Comparativa LRU x NRU ###
@@ -97,34 +109,45 @@ compressor.log      NRU                     32KB                    1MB         
                     NRU                     32KB                    8MB                 137           999863
 
                     LRU                     8KB                     1MB                 10928         989072
+                    NRU                     8KB                     1MB                 49292         950708
                     LRU                     16KB                    1MB                 15904         984096
-                    LRU                     32KB                    1MB                 21930         999282
-                    LRU                     8KB                     8MB                 2398          997602      
-                    LRU                     16KB                    8MB                 2380          997620
-                    LRU                     32KB                    8MB                 2331          997669
- matriz.log         NRU                     8KB                     1MB                 49292         950708
                     NRU                     16KB                    1MB                 150368        849632
+                    LRU                     32KB                    1MB                 21930         999282
                     NRU                     32KB                    1MB                 447461        552539
+matriz.log          LRU                     8KB                     8MB                 2398          997602 
                     NRU                     8KB                     8MB                 2719          997281
+                    LRU                     16KB                    8MB                 2380          997620
                     NRU                     16KB                    8MB                 3589          996411
+                    LRU                     32KB                    8MB                 2331          997669
                     NRU                     32KB                    8MB                 9329          990671       
 
                     LRU                     8KB                     1MB                 16479         983521
+                    NRU                     8KB                     1MB                 73268         926731
                     LRU                     16KB                    1MB                 29547         970453
-                    LRU                     32KB                    1MB                 36761         963239
-                    LRU                     8KB                     8MB                 3784          996216      
-                    LRU                     16KB                    8MB                 3924          996076
-                    LRU                     32KB                    8MB                 2786          997214
- matriz.log         NRU                     8KB                     1MB                 73268         926731
                     NRU                     16KB                    1MB                 137870        862130
+                    LRU                     32KB                    1MB                 36761         963239
                     NRU                     32KB                    1MB                 193703        806297
+simulador.log       LRU                     8KB                     8MB                 3784          996216   
                     NRU                     8KB                     8MB                 4261          995739
-                    NRU                     16KB                    8MB                 12760        987240
-                    NRU                     32KB                    8MB                 11348        988652                   
+                    LRU                     16KB                    8MB                 3924          996076
+                    NRU                     16KB                    8MB                 12760         987240
+                    LRU                     32KB                    8MB                 2786          997214
+                    NRU                     32KB                    8MB                 11348         988652                   
 
+### Conclusão ###
 
-  Compilador.log
+Através da análise da tabela, fica evidente que o LRU é um algoritmo mais eficiente do que o NRU.
 
+Apesar de ambos os algoritmos serem semelhantes, o LRU difere no fato de que ele "observa" o uso de uma página em um espaço de tempo recente,
+equanto o NRU apenas olha para o uso da página no último clock (lembrando que bits R sao resetados a cada clock).
 
+Dessa forma, o LRU é um algoritmo mais esperto. Ele trabalha com a ideia de que paginas que foram intensamente
+referenciadas/modificadas recentemente provavelmente serão usadas novamente no futuro próximo também, equanto páginas
+que não foram acessadas há um tempo maior provavelmente não serão acessadas no futuro próximo.
 
-### ALGORITMO NOVO ###
+Pode-se dizer que o LRU tem maior "preocupação" com o futuro do que o NRU, e "prevê" o que vai acontecer. 
+Por isso o número de PageFaults pelo método do LRU é bem menor quando comparado ao NRU.
+
+Pela tabela é fácil perceber também que o número de PageFaults do NRU cresce muito mais rápido do que o do LRU
+conforme o tamanho de página aumenta.
+
