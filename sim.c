@@ -1,34 +1,24 @@
+/* AUTOR: STEFANO VIVACQUA PEREIRA */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include "lista.h"
 
-#define TRUE 1
-#define FALSE 0
-
 /******** DECLARACOES GLOBAIS ********/
 
-//STRUCT PAGINA
-struct pagina {
-    int indice;
-    int r;
-    int w;
-
-}; typedef struct pagina Pagina;
-
-//STRUCT PageTableEntry
-struct PageTableEntry {
-    Pagina *pagina;
-    int presenca;
-}; typedef struct PageTableEntry PageTableEntry;
-
-//VARIAVEIS GLOBAIS
 int debug = FALSE;
+    //debug pode ser 1 e isso ativara prints de algumas funcoes do codigo
 
-PageTableEntry **PageTable;
+int *PageTable;
+    //pagetable guarda se a pagina de index i esta na memoria (se pagetable[i] = TRUE ou FALSE)
 
 ListaHead *MemoriaFisica;
+    //lista de paginas na memoria
+
+char algoritmo[3];
+    //onde sera guardado o argv[1]; o tipo de algoritimo
 
 /******** FIM DECLARACOES GLOBAIS ********/
 
@@ -57,22 +47,142 @@ int calculaS(int tamanhoPagina){
     return s;
 }
 
-// BUSCA PAGE TABLE
-// DESC: PROCURA POR PAGINA DENTRO DA ESTRUTURA PAGE TABLE
-// RECEBE INDICE DA PAGINA
-// RETORNA 1 SE PAGINA EXISTE NO PAGE TABLE
-// RETORNA 0 SE PAGINA NAO EXISTE NO PAGE TABLE
+// SWAP
+// DESC: REALIZA A TROCA DE PAGINAS DA MEMORIA DE ACORDO COM O ALGORITMO INPUTADO
+// RECEBE INDEX DA PAGINA A SER SWAPPED OUT
+// NAO RETORNA NADA
 
-int buscaPageTable(int index){
+void Swap(Pagina *pagina){
 
-    if(PageTable[index] == NULL){
-        //pagina com tal index ainda nao existe na PT
-        return 0;
+    if( (strcmp(algoritmo, "LRU") == 0) || (strcmp(algoritmo, "lru") == 0) ){
+        //se algoritmo eh LRU
+
+        if(debug == TRUE){
+            printf("DEBUG: Fazendo SWAP (LRU)\n");
+        }
+        
+        //remove presenca da page table
+        PageTable[MemoriaFisica->ultimo->pagina->indice] = FALSE;
+
+        //Remove a pagina 'mais velha' (esta no fim da lista)
+        RemoveDoFim(MemoriaFisica);
+        if(debug == TRUE){
+            printf("Index da pagina removida no swap: %d", MemoriaFisica->primeiro->pagina->indice);
+        }
+        
+        //Insere pagina nova (no inicio da lista)
+        InsereNoInicio(MemoriaFisica, pagina);
     }
-    else{
-        //pagina com tal index existe na PT
-        return 1;
+    else if( (strcmp(algoritmo, "NRU") == 0) || (strcmp(algoritmo, "nru") == 0) ){
+        //se algoritmo eh NRU
+
+        if(debug == TRUE){
+            printf("DEBUG: Fazendo SWAP (NRU)\n");
+        }
+
+        //prepara NoCorrente no whiles
+        ListaNo *NoCorrente = MemoriaFisica->ultimo;
+        //caso r = false e w = false
+        while(NoCorrente != NULL){
+
+            if(NoCorrente->pagina->r == FALSE && NoCorrente->pagina->w == FALSE){
+                //se r = false e w = false
+
+                //remove do page table
+                PageTable[NoCorrente->pagina->indice] = FALSE;
+
+                //remove no da lista
+                RemoveNo(MemoriaFisica, NoCorrente);
+                if(debug == TRUE){
+                    printf("Index da pagina removida no swap: %d\n", NoCorrente->pagina->indice);
+                }
+
+                //insere pagina nova na lista
+                InsereNoInicio(MemoriaFisica, pagina);
+
+                return;
+            }
+
+            NoCorrente = NoCorrente->anterior;
+        }
+        //prepara NoCorrente no whiles
+        NoCorrente = MemoriaFisica->ultimo;
+        //caso r = false e w = True
+        while(NoCorrente != NULL){
+
+            if(NoCorrente->pagina->r == FALSE && NoCorrente->pagina->w == TRUE){
+                //se r = false e w = false
+
+                //remove do page table
+                PageTable[NoCorrente->pagina->indice] = FALSE;
+
+                //remove no da lista
+                RemoveNo(MemoriaFisica, NoCorrente);
+                if(debug == TRUE){
+                    printf("Index da pagina removida no swap: %d\n", NoCorrente->pagina->indice);
+                }
+
+                //insere pagina nova na lista
+                InsereNoInicio(MemoriaFisica, pagina);
+
+                return;
+            }
+
+            NoCorrente = NoCorrente->anterior;
+        }
+        //prepara NoCorrente no whiles
+        NoCorrente = MemoriaFisica->ultimo;
+        //caso r = True e w = false
+        while(NoCorrente != NULL){
+
+            if(NoCorrente->pagina->r == TRUE && NoCorrente->pagina->w == FALSE){
+                //se r = false e w = false
+
+                //remove do page table
+                PageTable[NoCorrente->pagina->indice] = FALSE;
+
+                //remove no da lista
+                RemoveNo(MemoriaFisica, NoCorrente);
+                if(debug == TRUE){
+                    printf("Index da pagina removida no swap: %d\n", NoCorrente->pagina->indice);
+                }
+
+                //insere pagina nova na lista
+                InsereNoInicio(MemoriaFisica, pagina);
+
+                return;
+            }
+
+            NoCorrente = NoCorrente->anterior;
+        }
+        //prepara NoCorrente no whiles
+        NoCorrente = MemoriaFisica->ultimo;
+        //caso r = True e w = True
+        while(NoCorrente != NULL){
+
+            if(NoCorrente->pagina->r == TRUE && NoCorrente->pagina->w == TRUE){
+                //se r = false e w = false
+
+                //remove do page table
+                PageTable[NoCorrente->pagina->indice] = FALSE;
+
+                //remove no da lista
+                RemoveNo(MemoriaFisica, NoCorrente);
+                if(debug == TRUE){
+                    printf("Index da pagina removida no swap: %d\n", NoCorrente->pagina->indice);
+                }
+
+                //insere pagina nova na lista
+                InsereNoInicio(MemoriaFisica, pagina);
+
+                return;
+            }
+
+            NoCorrente = NoCorrente->anterior;
+        }        
     }
+
+    return;
 }
 
 // ESCREVE NA MEMORIA
@@ -80,9 +190,61 @@ int buscaPageTable(int index){
 // RECEBE INDICE (ENDERECO) E RW
 // RETORNA NADA
 
-void EscreveNaMemoria(int indice, char rw){
+void EscreveNaMemoria(int indice, char rw, int numMaxPags){
 
+    //CRIA PAGINA
     Pagina *pagina = (Pagina *) malloc(sizeof(Pagina));
+
+    pagina->indice = indice;
+    if(rw == 'R'){
+        pagina->r = TRUE;
+        pagina->w = FALSE;
+    }
+    else{
+        pagina->r = FALSE;
+        pagina->w = TRUE;
+    }
+
+    if(MemoriaFisica->tamanho <  numMaxPags){
+        //se memoria fisica nao esta cheia
+        if(debug == TRUE){
+            printf("DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria\n");
+        }
+
+        //insere pagina na lista de paginas na memoria
+        InsereNoInicio(MemoriaFisica, pagina);
+    }
+    else{
+        //se a memoria fisica esta cheia
+        if(debug == TRUE){
+            printf("DEBUG: Memoria fisica cheia; fazendo swap\n");
+        }
+
+        Swap(pagina);
+    }
+    
+
+    return;
+}
+
+// RESETA REFERENCIAS
+// DESC: RETA O INT R PARA 0 DE TODAS AS PAGINAS PRESENTES NA MEMORIA
+// RECEBE LISTA DE PAGINAS NA MEMORIA
+// RETORNA NADA
+
+void ResetaReferencias(ListaHead *MemoriaFisica){
+
+    ListaNo *NoCorrente = MemoriaFisica->primeiro;
+
+    //percorre a lista resentado
+    while(NoCorrente != NULL){
+        
+        //reseta r
+        NoCorrente->pagina->r = FALSE;
+        
+        //avanca na lista
+        NoCorrente = NoCorrente->proximo;
+    }
 
     return;
 }
@@ -97,9 +259,9 @@ int main (int argc,char* argv[]){
     
     //misc
     int i;
+    int iteracao = 0;
 
-    //argvs
-    char algoritmo[3];
+    //argvs ( lembando que algoritmo foi declarado globalmente)
     char arquivoNome[20]; //atencao aqui nesse tamanho
     int tamanhoPagina;
     int memoriaTotal;
@@ -117,8 +279,8 @@ int main (int argc,char* argv[]){
     int indexPagina;
 
     //contagens
-    int pageHits;
-    int pageFaults;
+    int pageHits = 0;
+    int pageFaults = 0;
 
     /******** FIM DECLARACOES **********/
 
@@ -137,10 +299,10 @@ int main (int argc,char* argv[]){
     debug = atoi(argv[5]);
 
     if(debug == TRUE){
-        printf("Rodando em modo de debug\n");
+        printf("\n!!!!! Rodando em modo de debug !!!!!\n\n");
     }
     else{
-        printf("Rodando em modo de producao\n");
+        printf("\n!!!!! Rodando em modo de producao !!!!!\n\n");
     }
 
     //calcula numero de paginas na memoria e na pagetable
@@ -152,13 +314,13 @@ int main (int argc,char* argv[]){
     }
 
     //aloca espaco da pagetable
-    PageTable = (PageTableEntry **) malloc(qtdPagsPageTable*sizeof(PageTableEntry *));
+    PageTable = (int*) malloc(qtdPagsPageTable*sizeof(int));
 
     //inicializa estruturas com nil
     MemoriaFisica = CriarLista();
 
-    for(i=0; i>qtdPagsPageTable; i++){
-        PageTable[i] = NULL;
+    for(i=0; i<qtdPagsPageTable; i++){
+        PageTable[i] = FALSE; //no inicio nenhuma pagina esta na memoria
     }
 
     //inicializa arquivo
@@ -173,72 +335,57 @@ int main (int argc,char* argv[]){
     /********* LEITURA DO ARQUIVO **********/
 
     while(fscanf(arquivo,"%x %c\n", &enderecoLogico, &rw) == 2){
-            
-            //calcula index das pagnas
-            indexPagina = enderecoLogico >> calculaS(tamanhoPagina);
-  
 
-            // TRATA PAGE TABLE
             if(debug == TRUE){
-                printf("DEBUG: Verificando existencia de pagina no page table...\n");
+                printf("DEBUG: Iteracao: %d\n", iteracao);
+                printf("DEBUG: Edereco lido do arquivo: %08X\n", enderecoLogico);
+                printf("DEBUG: RW lido do arquivo: %c\n", rw);
+            }
+            //calcula index das paginas
+            indexPagina = enderecoLogico >> calculaS(tamanhoPagina);
+
+            if(debug == TRUE){
+                printf("DEBUG: INDEX calculado a partir do endereco: %d\n", indexPagina);
             }
 
-            if(buscaPageTable(indexPagina) != 1){
-                //se pagna nao existe no page table:
-
-                if(debug == TRUE){
-                    printf("DEBUG: Pagina com index %d NAO existe na page table\n", indexPagina);
-                }
-
-                //cria pagina
-                Pagina *p = (Pagina *) malloc(sizeof(Pagina));
-                p->indice = indexPagina;
-                if(rw = 'R'){
-                    //se pagina for referenciada, r = true e w = false
-                    p->r = TRUE;
-                    p->w = FALSE;
-                }
-                else{
-                    //se pagina for lida, r = false e w = true
-                    p->r = FALSE;
-                    p->w = TRUE;
-                }
-
-                //cria entrada do page table
-                PageTableEntry *PTentry = malloc(sizeof(PageTableEntry));
-                PTentry->pagina = p;
-                PTentry->presenca = 0;
-
-                //insere no page table
-                PageTable[indexPagina] = PTentry;
-            }
-            else{
-                //se pagina ja existe no page table:
-
-                if(debug == TRUE){
-                    printf("DEBUG: Pagina com index %d JA existe na page table\n", indexPagina);
-                }
-                
-                //atualiza R ou W
-                if(rw = 'R'){
-                    //se pagina for referenciada atualiza r
-                    PageTable[indexPagina]->pagina->r = TRUE;
-                }
-                else{
-                    //se pagina for lida atualiza w
-                    PageTable[indexPagina]->pagina->w = TRUE;
-                }
-            }
-
-            // TRATA MEMORIA FISICA
             if(debug == TRUE){
                 printf("DEBUG: Verificando existencia de pagina na memoria...\n");
             }
 
-            if(PageTable[indexPagina]->presenca == TRUE){
+            // TRATA MEMORIA FISICA
+
+            if(PageTable[indexPagina] == TRUE){
                 //se pagina esta na memoria
                 if(debug == TRUE){
-                    printf("DEBUG: Pagina ja se encontra na memoria\n");
+                    printf("DEBUG: PAGE HIT! Pagina ja se encontra na memoria\n");
+                }
+
+                //obtem pagina para editar rw
+                Pagina *paginaHitada;
+                paginaHitada = obterPagina(MemoriaFisica, indexPagina);
+
+                if(paginaHitada == NULL){
+                    printf("ERRO OBTENCAO PAGINA HITADA\n");
+                    printf("Iteracao do erro: %d\n", iteracao);
+                    printf("Index da iteracao do erro: %d\n", indexPagina);
+                    exit(-1);
+                }
+                
+                //atualiza rw da pagina
+                if(rw == 'R'){
+                    paginaHitada->r = 1;
+                }
+                else{
+                    paginaHitada->w = 1;
+                }
+
+                //Se o algoritmo for LRU, envia pagina para inicio da fila
+                if( (strcmp(algoritmo, "LRU") == 0) || (strcmp(algoritmo, "lru") == 0) ){
+                    if(debug == TRUE){
+                        printf("DEBUG: LRU: Enviando pagina para inicio da lista\n");
+                    }
+
+                    EnviarParaInicio(MemoriaFisica,indexPagina);
                 }
 
                 pageHits++;
@@ -246,13 +393,31 @@ int main (int argc,char* argv[]){
             else{
                 //se pagina NAO esta na memoria
                 if(debug == TRUE){
-                    printf("DEBUG: Pagina ja se encontra na memoria\n");
+                    printf("DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria\n");
                 }
 
-                EscreveNaMemoria(indexPagina, rw);
+                //marca no page table
+                PageTable[indexPagina] = TRUE;
+
+                EscreveNaMemoria(indexPagina, rw, maxPagsMemoriaFisica);
+
+                //atualiza rw da pagina
 
                 pageFaults++;
             }
+
+        iteracao++;
+
+        //Se o algoritmo for NRU, reseta R de todas as paginas a cada 100000 (cem mil) iteracoes
+        if( (strcmp(algoritmo, "NRU") == 0) || (strcmp(algoritmo, "nru") == 0) ){
+            if(iteracao % 100000 == 0){
+                if(debug == TRUE){
+                    printf("Resetando bits R\n");
+                }
+
+                ResetaReferencias(MemoriaFisica);
+            }
+        }
 
         if(debug == TRUE){
             AguardaEnter();
@@ -260,9 +425,11 @@ int main (int argc,char* argv[]){
 
     }
 
+    printf("Fim da simulacao\n");
+    printf("Total de page faults: %d\n", pageFaults);
+    printf("Tptal de page hits: %d\n", pageHits);
+    printf("Total de iteracoes: %d\n", iteracao);
 
-
-    
     return 0;
 
 }

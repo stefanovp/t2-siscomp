@@ -1,4 +1,4 @@
-
+#include "sim.h"
 //lista duplamente encadeada com cabeca
 
 typedef struct ListaHead ListaHead;
@@ -38,7 +38,7 @@ int InsereNoInicio (ListaHead *head, Pagina *pagina);
 // ENVIAPARAINICIO
 // DESC: ACHA O NO COM O VALOR E O ENVIA PARA O INICIO DA LISTA
 
-int EnviarParaInicio(ListaHead *head, Pagina *pagina);
+int EnviarParaInicio(ListaHead *head, int index);
 
 // REMOVE NO
 // DESC: REMOVE UM NO DA LISTA
@@ -51,3 +51,11 @@ int RemoveNo(ListaHead *head, ListaNo *NoVitima);
 // RETORNA 1 SE NO FOI REMOVIDO, 0 SE NAO FOI
 
 int RemoveDoFim (ListaHead *head);
+
+// OBTER PAGINA
+// DESC: ACHA NO QUE CONTEM PAGINA COM INDEX E RETORNA ESSA PAGINA
+// RECEBE LISTA HEAD E INDEX (ID DA PG)
+// RETORNA A PAGINA ACHADA, OU
+// RETORNA NULL SE NAO ACHAR
+
+Pagina *obterPagina(ListaHead *head, int index);

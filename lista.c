@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lista.h"
-#include "sim.c"
+
 
 
 // CRIAR LISTA
@@ -42,7 +42,7 @@ int InsereNoFim (ListaHead *head, Pagina *pagina) {
     ListaNo *No = (ListaNo *) malloc(sizeof(ListaNo));
     No->anterior = NULL;
     No->proximo = NULL;
-    No->pagina = NULL;
+    No->pagina = pagina;
         
 
     if(head->primeiro == NULL){
@@ -91,7 +91,6 @@ int InsereNoInicio (ListaHead *head, Pagina *pagina) {
 
     if(head->primeiro == NULL){
         //Se lista esta vazia
-        printf("LISTA lista estava vazia\n");
 
         //atualiza head
         head->primeiro = No;
@@ -118,7 +117,7 @@ int InsereNoInicio (ListaHead *head, Pagina *pagina) {
 // ENVIAPARAINICIO
 // DESC: ACHA O NO COM O VALOR E O ENVIA PARA O INICIO DA LISTA
 
-int EnviarParaInicio(ListaHead *head, Pagina *pagina){
+int EnviarParaInicio(ListaHead *head, int index){
 
     if(head->tamanho == 0 || head->tamanho == 1){
         printf("LISTA ERRO ENVIAR PARA O INICIO: Lista esta vazia ou so tem 1 elemento");
@@ -128,9 +127,9 @@ int EnviarParaInicio(ListaHead *head, Pagina *pagina){
     ListaNo *NoCorrente = head->primeiro;
 
     while(NoCorrente != NULL){
-        if(NoCorrente->pagina == pagina){
+        if(NoCorrente->pagina->indice == index){
 
-            InsereNoInicio(head, pagina);
+            InsereNoInicio(head, NoCorrente->pagina);
             RemoveNo(head, NoCorrente);
 
             return 1;
@@ -236,4 +235,21 @@ int RemoveDoFim (ListaHead *head){
     head->tamanho--;
     return 1;
 
+}
+
+Pagina *obterPagina(ListaHead *head, int index){
+    
+    ListaNo *NoCorrente = head->primeiro;
+
+    while(NoCorrente != NULL){
+
+        if(NoCorrente->pagina->indice == index){
+            return NoCorrente->pagina;
+        }
+
+        NoCorrente = NoCorrente->proximo;
+    }
+
+    printf("Pagina nao encontrada na lista\n");
+    return NULL;
 }
