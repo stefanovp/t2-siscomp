@@ -1,0 +1,130 @@
+############ CABEÇALHO ############
+
+Relatório do Segundo Trabalho de INF1019 - 2019.1
+Simulador de de memória virtual
+
+Trabalho desenvolvido por:
+Stefano Vivacqua Pereira - 1611082
+
+############ IMPLEMENTACAO ############
+
+### Parametros de entrada ###
+
+O programa recebe 5 parametros de entrada:
+
+./sim-virtual <Algoritimo> <ArquivoDeEntrada> <TamanhoDaPagina> <TamanhoDaMemoria> <Debug>
+
+<Algoritmo>: Uma string de 3 caracteres indicando o algoritimo de swap (LRU ou NRU). Pode estar em maiúsculas ou minúsculas.
+<ArquivoDeEntrada>: Uma string contendo o nome do arquivo a ser lido.
+<TamanhoDaPagina>: Um inteiro indicando o tamanho das páginas simuladas em KB. Deve ser entrado valores entre 8 e 32.
+<TamanhoDaMemoria>: Um inteiro contendo o tamanho da memória física em MB. Pode varias de 1 a 16.
+<Debug>: Um inteiro indicando o modo de execução. Deve ser inputado 1 ou 0. 1 indica modo debug. 0 indica modo produção.
+
+Exemplo de execução:
+./sim-virtual LRU compilador.log 8 1 0
+algoritimo: LRU
+arquivo: compilador.log
+tamanho da pagina: 8kb
+tamanho da memoria: 1mb
+modo de execução: produção
+
+### Estrutura de dados ###
+
+PageTable[]: (vetor)
+
+Para a simulação da tabela de páginas foi usado um vetor de inteiros de tamanho do maior index possível, de acordo com o tamanho de página e o tamanho da memória.
+O índice deste vetor corresponde ao index de uma página.
+O conteúdo dos índices (os inteiros) correspondem a presença da página na memória física, podendo assumir valores 1 ou 0 (TRUE ou FALSE). 1 = presente na memória; 0 = ausente na memória.
+
+O tamanho desse vetor foi calculado de acordo com o "s" (deslocamento), como descrito no enunciado do trabalho.
+
+MemoriaFisica: (lista)
+
+Para simular as páginas na memória física foi usada uma lista duplamente encadeada com cabeça.
+A cabeça contem o tamanho da lista, além do ponteiro para o primeiro e para o último elemento. O tamanho é relevante pois a lista não pode ter tamanho maior do que o TamanhoDaMemoria/TamanhoDaPagina, passados de input.
+Cada elemento da lista possui um ponteiro para uma estrutura página.
+
+Foi escolhida uma lista para simular o armazenamento de páginas na memória porque facilita o desenvolvimento do algoritimo LRU. Apesar de não ser viável uma lista duplamente encadeada para o gerenciamento de memória na prática, para fins de simulação julguei suficiente.
+
+Pagina: (struct)
+Foi usada uma struct para representar as páginas propriamente ditas.
+Uma estutura página possui os campos:
+
+    int indice: Inteiro contendo o indice da página armazenada
+    int r: inteiro que diz se a página foi referenciada ou não. Assume valores 1 ou 0. 1 = referenciada; 0 = não referenciada.
+    int w; inteiro que diz se a página foi modificada ou não. Assume valores 1 ou 0. 1 = modificada; 0 = não modificada.
+
+### Funcionamento ###
+
+1. Cada linha do arquivo de entrada é lida em um loop que trata o armazenamento da página na memória e a manipulação da page Table.
+2. Em caso de page fault, a página é escrita na memória.
+3. Caso a memória esteja cheia, é feito o SWAP de páginas de acordo com o algoritmo especificado.
+4. Se o algoritmo é LRU, a cada page hit a página hitada é enviada para o inicio da lista de páginas na memória.
+5. Se o algoritmo é NRU, a cada 100000 loops o campo 'r' de todas as página é 0.
+
+A cada iteração também são incrementados o número de Page Hits ou Page Faults, de acordo com o que acontece.
+
+############ RESULTADOS ############
+
+### Tabela Comparativa LRU x NRU ###
+
+|    Arquivo    |   Algoritmo   |   Tamanho de página   |   Tamanho da memória  |   PageFaults  |   PageHits    |
+
+                    LRU                     8KB                     1MB                 36707         963293
+                    NRU                     8KB                     1MB                 48352         951648
+                    LRU                     16KB                    1MB                 47424         952576
+                    NRU                     16KB                    1MB                 121204        878796
+                    LRU                     32KB                    1MB                 49571         950429
+                    NRU                     32KB                    1MB                 169715        830285
+compilador.log      LRU                     8KB                     8MB                 3107          996896   
+                    NRU                     8KB                     8MB                 4136          995864
+                    LRU                     16KB                    8MB                 5084          994916
+                    NRU                     16KB                    8MB                 6608          993392
+                    LRU                     32KB                    8MB                 6270          993730
+                    NRU                     32KB                    8MB                 8384          991616
+
+                    LRU                     8KB                     1MB                 533           999467
+                    NRU                     8KB                     1MB                 761           999239
+                    LRU                     16KB                    1MB                 729           999271
+                    NRU                     16KB                    1MB                 5567          994413
+                    LRU                     32KB                    1MB                 718           999282
+compressor.log      NRU                     32KB                    1MB                 14059         985941
+                    LRU                     8KB                     8MB                 255           999745  
+                    NRU                     8KB                     8MB                 255           999745
+                    LRU                     16KB                    8MB                 209           999791
+                    NRU                     16KB                    8MB                 209           999791
+                    LRU                     32KB                    8MB                 137           999863
+                    NRU                     32KB                    8MB                 137           999863
+
+                    LRU                     8KB                     1MB                 10928         989072
+                    LRU                     16KB                    1MB                 15904         984096
+                    LRU                     32KB                    1MB                 21930         999282
+                    LRU                     8KB                     8MB                 2398          997602      
+                    LRU                     16KB                    8MB                 2380          997620
+                    LRU                     32KB                    8MB                 2331          997669
+ matriz.log         NRU                     8KB                     1MB                 49292         950708
+                    NRU                     16KB                    1MB                 150368        849632
+                    NRU                     32KB                    1MB                 447461        552539
+                    NRU                     8KB                     8MB                 2719          997281
+                    NRU                     16KB                    8MB                 3589          996411
+                    NRU                     32KB                    8MB                 9329          990671       
+
+                    LRU                     8KB                     1MB                 16479         983521
+                    LRU                     16KB                    1MB                 29547         970453
+                    LRU                     32KB                    1MB                 36761         963239
+                    LRU                     8KB                     8MB                 3784          996216      
+                    LRU                     16KB                    8MB                 3924          996076
+                    LRU                     32KB                    8MB                 2786          997214
+ matriz.log         NRU                     8KB                     1MB                 73268         926731
+                    NRU                     16KB                    1MB                 137870        862130
+                    NRU                     32KB                    1MB                 193703        806297
+                    NRU                     8KB                     8MB                 4261          995739
+                    NRU                     16KB                    8MB                 12760        987240
+                    NRU                     32KB                    8MB                 11348        988652                   
+
+
+  Compilador.log
+
+
+
+### ALGORITMO NOVO ###

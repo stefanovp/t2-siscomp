@@ -165,7 +165,7 @@ int RemoveNo(ListaHead *head, ListaNo *NoVitima){
         // se vitima eh o primeiro
 
         head->primeiro = NoVitima->proximo;
-        NoVitima->proximo->anterior == NULL;
+        NoVitima->proximo->anterior = NULL;
         free(NoVitima);
         
         head->tamanho--;

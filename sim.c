@@ -20,6 +20,10 @@ ListaHead *MemoriaFisica;
 char algoritmo[3];
     //onde sera guardado o argv[1]; o tipo de algoritimo
 
+int Escrita = 0;
+    //guarda numero de paginas escritas (modificadas)
+    //inserido no codigo para satisfazer o relatório
+
 /******** FIM DECLARACOES GLOBAIS ********/
 
 /***************** CODIGO FUNCOES ******************/
@@ -309,9 +313,14 @@ int main (int argc,char* argv[]){
     maxPagsMemoriaFisica = memoriaTotal/tamanhoPagina;
     qtdPagsPageTable = pow(2, 32 - calculaS(tamanhoPagina)); //32 eh o endereco inteiro; o indice eh 32 - os bits de tamanho da pagina (s)
 
+    //prints
+    printf("Arquivo de entrada: %s\n", arquivoNome);
+    printf("Tamanho da memoria física: %d\n", memoriaTotal);
+    printf("Tamanho da pagina: %d\n", tamanhoPagina);
     if(debug == TRUE){
-        printf("DEBUG: tamanho da pagina: %d\nDEBUG: s calculado: %d\n", tamanhoPagina, calculaS(tamanhoPagina));
+        printf("DEBUG:s calculado a partir do tamano da pagina: %d\n", calculaS(tamanhoPagina));
     }
+    printf("Algoritimo de swap: %s\n", algoritmo);
 
     //aloca espaco da pagetable
     PageTable = (int*) malloc(qtdPagsPageTable*sizeof(int));
@@ -335,6 +344,12 @@ int main (int argc,char* argv[]){
     /********* LEITURA DO ARQUIVO **********/
 
     while(fscanf(arquivo,"%x %c\n", &enderecoLogico, &rw) == 2){
+
+            //incrementa numero de paginas escritas se rw = w
+            //Isso foi inserido apos término do desenvolvimento, para satisfazer o relatório
+            if(rw == 'W'){
+                Escrita ++;
+            }
 
             if(debug == TRUE){
                 printf("DEBUG: Iteracao: %d\n", iteracao);
@@ -429,6 +444,7 @@ int main (int argc,char* argv[]){
     printf("Total de page faults: %d\n", pageFaults);
     printf("Tptal de page hits: %d\n", pageHits);
     printf("Total de iteracoes: %d\n", iteracao);
+    printf("Total de modificações em páginas %d\n", Escrita);
 
     return 0;
 
