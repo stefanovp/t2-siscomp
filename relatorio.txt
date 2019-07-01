@@ -8,7 +8,21 @@ Stefano Vivacqua Pereira - 1611082
 
 ############ IMPLEMENTACAO ############
 
-### Parametros de entrada ###
+### Compilação ###
+
+$gcc -Wall -o sim-virtual sim-virtual.c lista.c -lm
+
+Note que é necessário o uso do parametro "-lm" por causa do uso da biblioteca de matemática math.h no código fonte.
+
+Note também que o código fonte é divido em dois arquivos: sim-virtual.c e lista.c. Essa separação é meramente para 
+melhor organização do código, isto é, para evitar "poluir" o arquivo sim-virtual.c com funções que não se relacionam com o 
+trabalho diretamente, de inserção, criação, remoção, etc de uma lista duplamente encadeada com cabeça. .
+Entretanto, não é feito encapsulamento nenhum em qualquer um dos módulos, e todas as funções e estruturas 
+são de acesso global. É como se todas as funções estivessem em um arquivo só.
+
+
+
+### Execução ###
 
 O programa recebe 5 parametros de entrada:
 
@@ -69,8 +83,8 @@ A cada iteração também são incrementados o número de Page Hits ou Page Faul
 O algoritmo de substituição ideal saberia qual é a página que vai ser acessada no futuro mais distante, e
 faria o swap-out dela quando a memória física estivesse cheia. Melhor ainda, ao invés de simplesmente swap-out
 a página com acesso mais distante, ele levaria em consideração se esta página foi modificada ou não e, dentre um
-pequeno conjunto de páginas com os acessos mais distantes, daria preferência de swap-out a aquelas que não foram escritas,
-para não ter que copiar a página para o disco.
+pequeno conjunto de páginas com os acessos mais distantes (conjunto de páginas mais antigas), daria preferência de swap-out 
+a aquelas que não foram escritas, para não ter que copiar a página para o disco.
 
 Dessa forma, o número de PageFaults seria o perto do menor possível, equanto se leva o tempo de cópia da página 
 para o disco em consideração.
@@ -138,16 +152,91 @@ simulador.log       LRU                     8KB                     8MB         
 
 Através da análise da tabela, fica evidente que o LRU é um algoritmo mais eficiente do que o NRU.
 
-Apesar de ambos os algoritmos serem semelhantes, o LRU difere no fato de que ele "observa" o uso de uma página em um espaço de tempo recente,
-equanto o NRU apenas olha para o uso da página no último clock (lembrando que bits R sao resetados a cada clock).
+Apesar de ambos os algoritmos serem semelhantes, o LRU difere no fato de que ele "observa" o uso de uma página em 
+um espaço de tempo recente, equanto o NRU apenas olha para o uso da página no último clock 
+(lembrando que bits R sao resetados a cada clock).
 
 Dessa forma, o LRU é um algoritmo mais esperto. Ele trabalha com a ideia de que paginas que foram intensamente
 referenciadas/modificadas recentemente provavelmente serão usadas novamente no futuro próximo também, equanto páginas
 que não foram acessadas há um tempo maior provavelmente não serão acessadas no futuro próximo.
 
-Pode-se dizer que o LRU tem maior "preocupação" com o futuro do que o NRU, e "prevê" o que vai acontecer. 
+Pode-se dizer que o LRU tem maior "preocupação" com o futuro do que o NRU, e "prevê" melhor o que realmente acontece. 
 Por isso o número de PageFaults pelo método do LRU é bem menor quando comparado ao NRU.
 
 Pela tabela é fácil perceber também que o número de PageFaults do NRU cresce muito mais rápido do que o do LRU
 conforme o tamanho de página aumenta.
 
+De forma geral, a tabelaa nos mostra também que páginas de tamanho maiores por vezes nos dão um desempenho melhor
+(menos PageFaults), outras vezes não. Aparentemente, quando a memória é de 1MB, páginas menores são melhores do que
+páginas maiores, equanto para memória de 8MB acontece o contrário: páginas maiores tem melhor aproveitamento
+
+Para mim, a expectativa era que o uso de páginas maiores sempre fosse melhor, pois dificulta o Thrashing. No entanto,
+devemos levar em conta também o número máximo de páginas na memória. Para memórias pequenas, o menor tamanho de página
+faz com que tenham mais páginas carregadas na memória, o que "compensa" e faz com que, para o mesmo tamanho de memória
+física, o desempenho seja menor do que quando usamos páginas mairoes.
+
+############ EXEMPLO DE SAIDA ##############
+
+$ ./sim-virtual LRU compilador.log 8 1 1
+
+!!!!! Rodando em modo de debug !!!!!
+
+Arquivo de entrada: compilador.log
+Tamanho da memoria física: 1024
+Tamanho da pagina: 8
+DEBUG:s calculado a partir do tamano da pagina: 13
+Algoritimo de swap: LRU
+DEBUG: Iteracao: 0
+DEBUG: Edereco lido do arquivo: 0041F7A0
+DEBUG: RW lido do arquivo: R
+DEBUG: INDEX calculado a partir do endereco: 527
+DEBUG: Verificando existencia de pagina na memoria...
+DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria
+DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria
+
+DEBUG: pressione ENTER para continuar a execucao...
+DEBUG: Iteracao: 1
+DEBUG: Edereco lido do arquivo: 13F5E2C0
+DEBUG: RW lido do arquivo: R
+DEBUG: INDEX calculado a partir do endereco: 40879
+DEBUG: Verificando existencia de pagina na memoria...
+DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria
+DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria
+
+DEBUG: pressione ENTER para continuar a execucao...
+DEBUG: Iteracao: 2
+DEBUG: Edereco lido do arquivo: 05E78900
+DEBUG: RW lido do arquivo: R
+DEBUG: INDEX calculado a partir do endereco: 12092
+DEBUG: Verificando existencia de pagina na memoria...
+DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria
+DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria
+
+DEBUG: pressione ENTER para continuar a execucao...
+DEBUG: Iteracao: 3
+DEBUG: Edereco lido do arquivo: 004758A0
+DEBUG: RW lido do arquivo: R
+DEBUG: INDEX calculado a partir do endereco: 570
+DEBUG: Verificando existencia de pagina na memoria...
+DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria
+DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria
+
+DEBUG: pressione ENTER para continuar a execucao...
+DEBUG: Iteracao: 4
+DEBUG: Edereco lido do arquivo: 31348900
+DEBUG: RW lido do arquivo: W
+DEBUG: INDEX calculado a partir do endereco: 100772
+DEBUG: Verificando existencia de pagina na memoria...
+DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria
+DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria
+
+DEBUG: pressione ENTER para continuar a execucao...
+DEBUG: Iteracao: 5
+DEBUG: Edereco lido do arquivo: 004A30E0
+DEBUG: RW lido do arquivo: R
+DEBUG: INDEX calculado a partir do endereco: 593
+DEBUG: Verificando existencia de pagina na memoria...
+DEBUG: PAGE FAULT! Pagina NAO se encontra na memoria
+DEBUG: memoria fisica NAO esta cheia; escrevendo na memoria
+
+DEBUG: pressione ENTER para continuar a execucao...
